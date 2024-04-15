@@ -1,0 +1,9 @@
+a c 1
+a e 10
+b c 2
+c b 6
+c d 2
+c e 5
+d b 2
+d e 2
+e d 1
