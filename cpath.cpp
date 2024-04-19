@@ -3,7 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <queue>
-#include <algorithm>
+#include <limits>
 #include "graph.h"
 
 using namespace std;
@@ -21,8 +21,6 @@ bool readGraphFromFile(const string& filename, graph<int, int>& g) {
 
     int u, v, c, t;
     while (inputFile >> u >> v >> c >> t) {
-        g.addVertex(u);
-        g.addVertex(v);
         g.addEdge(u, v, c);
     }
 
@@ -32,43 +30,49 @@ bool readGraphFromFile(const string& filename, graph<int, int>& g) {
 
 // Function to perform the Dijkstra-like algorithm
 void closest_constrained_path(const graph<int, int>& g, int source, int destination, int budget) {
+    vector<int> minCost(g.NumVertices(), numeric_limits<int>::max()); // Minimum cost to reach each vertex
+    vector<int> minTime(g.NumVertices(), numeric_limits<int>::max()); // Minimum time to reach each vertex
+    vector<int> prev(g.NumVertices(), -1); // Previous vertex in the shortest path
+
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-    vector<pair<int, int>> minPath(g.NumVertices(), {INT_MAX, INT_MAX});
-    pq.push({0, 0}); // Initial path with cost = 0 and time = 0 at the source vertex
-    minPath[source] = {0, 0}; // Cost and time at source vertex
+    pq.push({0, source}); // Initial path with cost = 0 at the source vertex
+    minCost[source] = 0; // Cost at source vertex
+    minTime[source] = 0; // Time at source vertex
 
     while (!pq.empty()) {
-        auto [currentCost, currentTime] = pq.top();
+        auto [currentCost, currentVertex] = pq.top();
         pq.pop();
 
+        // Skip paths that exceed the budget
         if (currentCost > budget) {
-            continue; // Skip paths that exceed the budget
+            continue;
         }
 
-        if (currentCost <= budget && minPath[destination].first > currentCost) {
-            minPath[destination] = {currentCost, currentTime};
+        if (currentVertex == destination) {
+            // Found the destination vertex
+            cout << "Cost: " << minCost[destination] << ", Time: " << minTime[destination] << endl;
+            return;
         }
 
-        for (int neighbor : g.neighbors(destination)) {
+        for (int neighbor : g.neighbors(currentVertex)) {
             int edgeWeight;
-            if (g.getWeight(destination, neighbor, edgeWeight)) {
+            if (g.getWeight(currentVertex, neighbor, edgeWeight)) {
                 int newCost = currentCost + edgeWeight;
-                int newTime = currentTime + edgeWeight;
+                int newTime = minTime[currentVertex] + edgeWeight;
 
-                if (newCost <= budget && minPath[neighbor].first > newCost) {
-                    minPath[neighbor] = {newCost, newTime};
-                    pq.push({newCost, newTime});
+                // Relaxation step
+                if (newCost <= budget && newCost < minCost[neighbor]) {
+                    minCost[neighbor] = newCost;
+                    minTime[neighbor] = newTime;
+                    prev[neighbor] = currentVertex;
+                    pq.push({newCost, neighbor});
                 }
             }
         }
     }
 
-    // Output the result for the destination vertex
-    if (minPath[destination].first == INT_MAX) {
-        cout << "No feasible path within the budget." << endl;
-    } else {
-        cout << "Cost: " << minPath[destination].first << ", Time: " << minPath[destination].second << endl;
-    }
+    // If no feasible path exists within the budget
+    cout << "No feasible path within the budget." << endl;
 }
 
 int main(int argc, char* argv[]) {
