@@ -72,11 +72,6 @@ void closest_constrained_path(const graph<int, int>& g, int source, int destinat
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 5) {
-        cerr << "Usage: " << argv[0] << " <file> <s> <d> <budget>" << endl;
-        return 1;
-    }
-
     // Parse command line arguments
     string filename = argv[1];
     int source = stoi(argv[2]);
