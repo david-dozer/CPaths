@@ -12,10 +12,15 @@ using namespace std;
 template<typename VertexT, typename WeightT>
 class graph {
 private:
-    map<VertexT, map<VertexT, WeightT>> adjList;
+    struct Edge {
+        WeightT cost;
+        WeightT time;
+    };
+    map<VertexT, map<VertexT, Edge>> adjList;
     vector<VertexT> vertices;
 
 public:
+
     struct PathSignature {
         WeightT cost;
         WeightT time;
@@ -81,19 +86,22 @@ public:
         return true;
     }
 
-    bool addEdge(const VertexT& from, const VertexT& to, const WeightT& weight) {
+    bool addEdge(const VertexT& from, const VertexT& to, const WeightT& cost, const WeightT& time) {
         addVertex(from);
         addVertex(to);
-
-        adjList[from][to] = weight;
-        adjList[to][from] = weight; // For bidirectional edges
+    
+        Edge edgeData = {cost, time};
+        adjList[from][to] = edgeData;
+        adjList[to][from] = edgeData; // For bidirectional edges
         return true;
     }
 
-    bool getWeight(const VertexT& from, const VertexT& to, WeightT& weight) const {
+    bool getWeight(const VertexT& from, const VertexT& to, WeightT& cost, WeightT& time) const {
         auto it = adjList.find(from);
         if (it != adjList.end() && it->second.find(to) != it->second.end()) {
-            weight = it->second.at(to);
+            const Edge& edgeData = it->second.at(to);
+            cost = edgeData.cost;
+            time = edgeData.time;
             return true;
         }
         return false;
